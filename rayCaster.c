@@ -47,17 +47,18 @@ void end(void){
 #define MAP_HEIGHT 8
 #define RENDER_DISTANCE 16.0f
 #define MOVE_SPEED 0.3f
+
 bool WorldMap[MAP_HEIGHT][MAP_WIDTH] = {
-  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, // x  0
+  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+  {1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1},
+  {1,0,0,1,0,0,0,0,0,0,0,0,1,1,1,1},
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  {1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-  {1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1},
   {1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+  {1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1},
+  {1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,1},
   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-};//
-// 0 y
+};
+
 float posX = 4, posY = 4;
 float angle = 0, fov = 3.141592 / 4.0;
 
@@ -74,49 +75,49 @@ void renderFrame(){
     float rayDistance = 0.01f;
     bool rayHit = false;
     
-    float planeX = sinf(rayAngle);
-    float planeY = cosf(rayAngle);
+    float stepX = sinf(rayAngle);
+    float stepY = cosf(rayAngle);
     
     while(!rayHit && rayDistance < RENDER_DISTANCE){
       rayDistance += 0.01f;
 
-      int rayX = (int)(posX + rayDistance * planeX);
-      int rayY = (int)(posY + rayDistance * planeY);
+      int rayX = (int)(posX + rayDistance * stepX);
+      int rayY = (int)(posY + rayDistance * stepY);
       
-      if(rayX < 0 || rayX > MAP_WIDTH || rayY < 0 || rayY > MAP_WIDTH){
+      if(rayX < 0 || rayX > MAP_HEIGHT || rayY < 0 || rayY > MAP_WIDTH){
         rayHit = true;
         }
 
       else if(WorldMap[rayX][rayY] == 1) rayHit = true;
     
     }
-    int dCeiling = (int)(SCREEN_HEIGHT/2.0f + SCREEN_HEIGHT / (rayDistance + 1.5f)); //Ceiling distance
-    int dFloor = SCREEN_HEIGHT - dCeiling; //Floor distance
-    
-    SDL_SetRenderDrawColor(Renderer, 100, 30, 30, 255);
+    int dCeiling = (int)(SCREEN_HEIGHT/2.0f + SCREEN_HEIGHT / (rayDistance + 1.5f)); 
+    int dFloor = SCREEN_HEIGHT - dCeiling;
+    float shade = 1 - (rayDistance / RENDER_DISTANCE);
+    SDL_SetRenderDrawColor(Renderer, (int)(170 * shade), (int)(50 * shade), (int)(50 * shade), 255);
     SDL_RenderLine(Renderer, i, dFloor, i, dCeiling);
   }
 
   SDL_RenderPresent(Renderer);
 }
 void moveF(){
-  float planeX = sinf(angle);
-  float planeY = cosf(angle);
-  posX += MOVE_SPEED * planeX;
-  posY += MOVE_SPEED * planeY;
+  float stepX = sinf(angle);
+  float stepY = cosf(angle);
+  posX += MOVE_SPEED * stepX;
+  posY += MOVE_SPEED * stepY;
   if(WorldMap[(int)posX][(int)posY]==1){
-    posX -= MOVE_SPEED * planeX;
-    posY -= MOVE_SPEED * planeY;
+    posX -= MOVE_SPEED * stepX;
+    posY -= MOVE_SPEED * stepY;
   }
 }
 void moveB(){
-  float planeX = sinf(angle);
-  float planeY = cosf(angle);
-  posX -= MOVE_SPEED * planeX;
-  posY -= MOVE_SPEED * planeY;
+  float stepX = sinf(angle);
+  float stepY = cosf(angle);
+  posX -= MOVE_SPEED * stepX;
+  posY -= MOVE_SPEED * stepY;
   if(WorldMap[(int)posX][(int)posY]==1){
-    posX += MOVE_SPEED * planeX;
-    posY += MOVE_SPEED * planeY;
+    posX += MOVE_SPEED * stepX;
+    posY += MOVE_SPEED * stepY;
   }
 }
 void loop(){
@@ -152,14 +153,10 @@ while(!quit){
 int main(void){
   if(!init())
     return -1;
-
   if(!makeWindow())
     return -2;
 
-
-
   loop();
-
   end();
   return 0;
 }
